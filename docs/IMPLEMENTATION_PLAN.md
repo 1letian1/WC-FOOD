@@ -71,6 +71,8 @@ WC-Food/
 
 内容：建表脚本、枚举编码、Entity/Mapper、自动填充、分页、开发测试数据。
 
+当前进度：已完成公开店铺信息查询垂直切片，包括 `shop` 表、稳定营业状态编码、Entity/Mapper/XML、Service、公开 Controller 与测试；M2 其余核心表仍待后续切片完成。
+
 验收：
 
 - MySQL 8.4 全新实例可一次初始化；所有表/索引与 `DATABASE_DESIGN.md` 一致。

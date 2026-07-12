@@ -13,6 +13,8 @@ mvn spring-boot:run -Dspring-boot.run.profiles=dev
 
 数据库首次启动执行 `src/main/resources/db/schema.sql`。健康检查为 `GET /api/common/health`，dev 环境 Swagger UI 为 `/swagger-ui.html`。
 
+初始化结构后可执行 `src/main/resources/db/data.sql` 写入非生产店铺示例数据。公开店铺接口为 `GET /api/common/shop`，默认店铺由环境变量 `DEFAULT_SHOP_ID` 指定。
+
 验证命令：
 
 ```bash
@@ -20,4 +22,4 @@ mvn test
 mvn clean package
 ```
 
-生产环境默认关闭 Swagger。业务模块将在后续里程碑分阶段实现。
+生产环境默认关闭 Swagger。示例联系电话和地址必须在部署前替换；业务模块将在后续里程碑分阶段实现。

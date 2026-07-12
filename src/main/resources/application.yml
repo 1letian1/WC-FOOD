@@ -35,6 +35,8 @@ springdoc:
     enabled: false
     path: /swagger-ui.html
 shike:
+  shop:
+    default-shop-id: ${DEFAULT_SHOP_ID:1}
   auth:
     user-session-ttl: ${USER_SESSION_TTL:7d}
     merchant-session-ttl: ${MERCHANT_SESSION_TTL:12h}

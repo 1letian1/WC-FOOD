@@ -15,6 +15,7 @@ public enum ErrorCode {
     ORDER_NOT_FOUND(60001, "订单不存在", HttpStatus.NOT_FOUND),
     ORDER_STATE_CONFLICT(60002, "订单状态已变化，请刷新后重试", HttpStatus.CONFLICT),
     DUPLICATE_OPERATION(60004, "请求重复，请勿重复操作", HttpStatus.CONFLICT),
+    SHOP_NOT_FOUND(70005, "店铺不存在", HttpStatus.NOT_FOUND),
     REDIS_UNAVAILABLE(90002, "服务暂时不可用，请稍后重试", HttpStatus.SERVICE_UNAVAILABLE),
     SYSTEM_ERROR(99999, "系统繁忙，请稍后重试", HttpStatus.INTERNAL_SERVER_ERROR);
 

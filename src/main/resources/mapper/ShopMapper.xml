@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shike.ordering.mapper.ShopMapper">
+    <resultMap id="ShopResultMap" type="com.shike.ordering.entity.Shop">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="logoUrl" column="logo_url"/>
+        <result property="phone" column="phone"/>
+        <result property="address" column="address"/>
+        <result property="notice" column="notice"/>
+        <result property="businessHours" column="business_hours"/>
+        <result property="businessStatus" column="business_status"/>
+        <result property="dineInEnabled" column="dine_in_enabled"/>
+        <result property="deliveryEnabled" column="delivery_enabled"/>
+        <result property="deliveryFee" column="delivery_fee"/>
+        <result property="minDeliveryAmount" column="min_delivery_amount"/>
+        <result property="packageFee" column="package_fee"/>
+        <result property="deliveryRange" column="delivery_range"/>
+        <result property="estimatedDeliveryMinutes" column="estimated_delivery_minutes"/>
+        <result property="version" column="version"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <!-- 公开店铺聚合查询：只读取用户端展示所需字段，不返回内部或敏感配置。 -->
+    <select id="selectPublicShopById" resultMap="ShopResultMap">
+        SELECT s.id, s.name, s.logo_url, s.phone, s.address, s.notice, s.business_hours,
+               s.business_status, s.dine_in_enabled, s.delivery_enabled, s.delivery_fee,
+               s.min_delivery_amount, s.package_fee, s.delivery_range,
+               s.estimated_delivery_minutes, s.version, s.create_time, s.update_time
+        FROM shop s
+        WHERE s.id = #{shopId}
+        LIMIT 1
+    </select>
+</mapper>
