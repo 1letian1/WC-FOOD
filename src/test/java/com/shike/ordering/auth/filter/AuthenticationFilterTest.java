@@ -25,4 +25,18 @@ class AuthenticationFilterTest {
         verify(chain).doFilter(request, response);
         verifyNoInteractions(sessionService);
     }
+
+    @Test
+    void doFilter_whenRequestingPublicCategories_shouldNotReadSession() throws Exception {
+        RedisSessionService sessionService = mock(RedisSessionService.class);
+        AuthenticationFilter filter = new AuthenticationFilter(sessionService, new ObjectMapper());
+        FilterChain chain = mock(FilterChain.class);
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/user/categories");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        filter.doFilter(request, response, chain);
+
+        verify(chain).doFilter(request, response);
+        verifyNoInteractions(sessionService);
+    }
 }

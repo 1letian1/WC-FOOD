@@ -29,6 +29,22 @@ CREATE TABLE IF NOT EXISTS shop (
   CONSTRAINT chk_shop_package_fee CHECK (package_fee >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='店铺';
 
+CREATE TABLE IF NOT EXISTS category (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
+  shop_id BIGINT UNSIGNED NOT NULL COMMENT '所属店铺ID',
+  name VARCHAR(64) NOT NULL COMMENT '分类名称',
+  status TINYINT NOT NULL DEFAULT 1 COMMENT '状态：0禁用，1启用',
+  sort INT NOT NULL DEFAULT 0 COMMENT '展示顺序，数值越小越靠前',
+  deleted TINYINT NOT NULL DEFAULT 0 COMMENT '逻辑删除：0否，1是',
+  create_time DATETIME(3) NOT NULL COMMENT '创建时间',
+  update_time DATETIME(3) NOT NULL COMMENT '更新时间',
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_category_shop_name_deleted (shop_id, name, deleted),
+  KEY idx_category_shop_status_sort (shop_id, status, sort),
+  CONSTRAINT chk_category_status CHECK (status IN (0, 1)),
+  CONSTRAINT chk_category_deleted CHECK (deleted IN (0, 1))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='商品分类';
+
 -- 基础里程碑示范表，业务表按 docs/DATABASE_DESIGN.md 后续分阶段加入。
 CREATE TABLE IF NOT EXISTS system_config (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',

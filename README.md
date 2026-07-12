@@ -15,6 +15,8 @@ mvn spring-boot:run -Dspring-boot.run.profiles=dev
 
 初始化结构后可执行 `src/main/resources/db/data.sql` 写入非生产店铺示例数据。公开店铺接口为 `GET /api/common/shop`，默认店铺由环境变量 `DEFAULT_SHOP_ID` 指定。
 
+用户端公开分类接口为 `GET /api/user/categories`，仅返回默认店铺已启用且未逻辑删除的分类，并按 `sort`、`id` 稳定排序。
+
 验证命令：
 
 ```bash
