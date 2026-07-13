@@ -17,6 +17,11 @@ public class RedisSessionService {
     public void save(String token, AuthSession session) {
         Duration ttl = session.principalType() == PrincipalType.USER ? properties.userSessionTtl() : properties.merchantSessionTtl();
         redisTemplate.opsForValue().set(keyFactory.sessionKey(session.principalType(), token), toJson(session), ttl);
+        if (session.principalType() == PrincipalType.MERCHANT) {
+            String tokensKey = keyFactory.merchantTokensKey(session.principalId());
+            redisTemplate.opsForSet().add(tokensKey, token);
+            redisTemplate.expire(tokensKey, ttl);
+        }
     }
     public Optional<AuthSession> find(PrincipalType type, String token) {
         String json = redisTemplate.opsForValue().get(keyFactory.sessionKey(type, token));
@@ -24,7 +29,18 @@ public class RedisSessionService {
         try { return Optional.of(objectMapper.readValue(json, AuthSession.class)); }
         catch (JsonProcessingException exception) { throw new IllegalStateException("Invalid authentication session data", exception); }
     }
-    public void delete(PrincipalType type, String token) { redisTemplate.delete(keyFactory.sessionKey(type, token)); }
+    public void delete(PrincipalType type, Long principalId, String token) {
+        redisTemplate.delete(keyFactory.sessionKey(type, token));
+        if (type == PrincipalType.MERCHANT) redisTemplate.opsForSet().remove(keyFactory.merchantTokensKey(principalId), token);
+    }
+    public void deleteAllMerchantSessions(Long merchantId) {
+        String tokensKey = keyFactory.merchantTokensKey(merchantId);
+        var tokens = redisTemplate.opsForSet().members(tokensKey);
+        if (tokens != null && !tokens.isEmpty()) {
+            redisTemplate.delete(tokens.stream().map(token -> keyFactory.sessionKey(PrincipalType.MERCHANT, token)).toList());
+        }
+        redisTemplate.delete(tokensKey);
+    }
     private String toJson(AuthSession session) {
         try { return objectMapper.writeValueAsString(session); }
         catch (JsonProcessingException exception) { throw new IllegalStateException("Authentication session serialization failed", exception); }

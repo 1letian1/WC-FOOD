@@ -40,6 +40,13 @@ shike:
   auth:
     user-session-ttl: ${USER_SESSION_TTL:7d}
     merchant-session-ttl: ${MERCHANT_SESSION_TTL:12h}
+    merchant-failure-window: 15m
+    merchant-max-failures: 5
+    merchant-lock-ttl: 30m
+  wechat:
+    app-id: ${WECHAT_APP_ID:}
+    app-secret: ${WECHAT_APP_SECRET:}
+    mock-enabled: false
   redis:
     key-prefix: "shike:"
   cors:

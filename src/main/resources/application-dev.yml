@@ -6,3 +6,6 @@ springdoc:
 logging:
   level:
     com.shike.ordering: DEBUG
+shike:
+  wechat:
+    mock-enabled: ${WECHAT_MOCK_ENABLED:false}

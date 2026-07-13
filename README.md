@@ -1,6 +1,6 @@
 # 食刻小馆后端
 
-单店铺微信点餐小程序的 Spring Boot 后端。当前已完成 M1 基础工程和 M2 数据库基础能力，包括统一响应与异常、鉴权基础设施、MyBatis-Plus、Redis、OpenAPI、健康检查，以及 12 张核心业务表的实体和 Mapper。
+单店铺微信点餐小程序的 Spring Boot 后端。当前已完成 M1—M3，包括基础工程、数据库基础能力、双端登录与权限、统一响应与异常、MyBatis-Plus、Redis、OpenAPI、健康检查，以及 12 张核心业务表的实体和 Mapper。
 
 ## 环境与启动
 
@@ -23,6 +23,8 @@ mysql --default-character-set=utf8mb4 -h 127.0.0.1 -u <用户名> -p -e "SOURCE 
 
 用户端公开分类接口为 `GET /api/user/categories`，仅返回默认店铺已启用且未逻辑删除的分类，并按 `sort`、`id` 稳定排序。
 
+dev 环境需要模拟微信登录时，显式设置 `WECHAT_MOCK_ENABLED=true`；该开关默认关闭且 prod 配置强制关闭。用户登录使用 `POST /api/user/auth/wechat-login`，商家登录使用 `POST /api/merchant/auth/login`，登录后的接口通过 `Authorization: Bearer <token>` 访问。
+
 验证命令：
 
 ```bash
@@ -30,4 +32,4 @@ mvn test
 mvn clean package
 ```
 
-生产环境默认关闭 Swagger。示例账号、联系电话、地址和图片路径必须在部署前替换；登录、商品管理、购物车和订单等业务能力将在后续里程碑分阶段实现。
+生产环境默认关闭 Swagger。示例账号、联系电话、地址和图片路径必须在部署前替换；商品管理、购物车和订单等业务能力将在后续里程碑分阶段实现。

@@ -12,10 +12,14 @@ public enum ErrorCode {
     DATA_CONFLICT(10006, "数据已存在或存在关联，无法操作", HttpStatus.CONFLICT),
     UNAUTHORIZED(20001, "未登录或登录已过期", HttpStatus.UNAUTHORIZED),
     FORBIDDEN(20002, "无权限访问", HttpStatus.FORBIDDEN),
+    MERCHANT_BAD_CREDENTIALS(30001, "账号或密码错误", HttpStatus.UNAUTHORIZED),
+    MERCHANT_DISABLED(30002, "商家账号已禁用", HttpStatus.FORBIDDEN),
+    MERCHANT_LOGIN_LOCKED(30003, "登录失败次数过多，请稍后重试", HttpStatus.TOO_MANY_REQUESTS),
     ORDER_NOT_FOUND(60001, "订单不存在", HttpStatus.NOT_FOUND),
     ORDER_STATE_CONFLICT(60002, "订单状态已变化，请刷新后重试", HttpStatus.CONFLICT),
     DUPLICATE_OPERATION(60004, "请求重复，请勿重复操作", HttpStatus.CONFLICT),
     SHOP_NOT_FOUND(70005, "店铺不存在", HttpStatus.NOT_FOUND),
+    WECHAT_SERVICE_ERROR(90001, "微信服务调用失败", HttpStatus.BAD_GATEWAY),
     REDIS_UNAVAILABLE(90002, "服务暂时不可用，请稍后重试", HttpStatus.SERVICE_UNAVAILABLE),
     SYSTEM_ERROR(99999, "系统繁忙，请稍后重试", HttpStatus.INTERNAL_SERVER_ERROR);
 

@@ -13,3 +13,6 @@ springdoc:
     enabled: true
   swagger-ui:
     enabled: true
+shike:
+  wechat:
+    mock-enabled: ${WECHAT_MOCK_ENABLED:false}

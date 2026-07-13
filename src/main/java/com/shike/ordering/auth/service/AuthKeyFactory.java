@@ -10,4 +10,7 @@ public class AuthKeyFactory {
         String realm = type == PrincipalType.USER ? "user" : "merchant";
         return properties.keyPrefix() + "auth:" + realm + ":session:" + token;
     }
+    public String merchantFailureKey(String username) { return properties.keyPrefix() + "auth:merchant:fail:" + username; }
+    public String merchantLockKey(String username) { return properties.keyPrefix() + "auth:merchant:lock:" + username; }
+    public String merchantTokensKey(Long merchantId) { return properties.keyPrefix() + "auth:merchant:tokens:" + merchantId; }
 }

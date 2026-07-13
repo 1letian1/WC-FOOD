@@ -39,7 +39,8 @@ public class AuthenticationFilter extends OncePerRequestFilter {
         Optional<AuthSession> session = token == null ? Optional.empty() : sessionService.find(type, token);
         if (session.isEmpty()) { writeUnauthorized(response); return; }
         AuthSession authSession = session.get();
-        PrincipalContext.set(new CurrentPrincipal(authSession.principalId(), authSession.principalType(), authSession.shopId()));
+        if (authSession.principalType() != type) { writeUnauthorized(response); return; }
+        PrincipalContext.set(new CurrentPrincipal(authSession.principalId(), authSession.principalType(), authSession.shopId(), token));
         try { chain.doFilter(request, response); } finally { PrincipalContext.clear(); }
     }
     private String resolveToken(String header) {

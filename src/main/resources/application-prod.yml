@@ -6,3 +6,6 @@ springdoc:
 logging:
   level:
     root: INFO
+shike:
+  wechat:
+    mock-enabled: false
