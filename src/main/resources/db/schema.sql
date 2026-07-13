@@ -45,7 +45,232 @@ CREATE TABLE IF NOT EXISTS category (
   CONSTRAINT chk_category_deleted CHECK (deleted IN (0, 1))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='商品分类';
 
--- 基础里程碑示范表，业务表按 docs/DATABASE_DESIGN.md 后续分阶段加入。
+CREATE TABLE IF NOT EXISTS `user` (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
+  openid VARCHAR(64) NOT NULL COMMENT '微信小程序用户唯一标识',
+  nickname VARCHAR(64) NULL COMMENT '昵称',
+  avatar_url VARCHAR(500) NULL COMMENT '头像URL',
+  phone VARCHAR(20) NULL COMMENT '手机号',
+  status TINYINT NOT NULL DEFAULT 1 COMMENT '状态：0禁用，1正常',
+  last_login_time DATETIME(3) NULL COMMENT '最后登录时间',
+  create_time DATETIME(3) NOT NULL COMMENT '创建时间',
+  update_time DATETIME(3) NOT NULL COMMENT '更新时间',
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_user_openid (openid),
+  CONSTRAINT chk_user_status CHECK (status IN (0, 1))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='用户';
+
+CREATE TABLE IF NOT EXISTS merchant_account (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
+  shop_id BIGINT UNSIGNED NOT NULL COMMENT '所属店铺ID',
+  username VARCHAR(64) NOT NULL COMMENT '登录账号',
+  password_hash VARCHAR(100) NOT NULL COMMENT 'BCrypt密码哈希',
+  password_algorithm VARCHAR(20) NOT NULL DEFAULT 'BCRYPT' COMMENT '密码算法',
+  merchant_name VARCHAR(64) NOT NULL COMMENT '商家姓名',
+  avatar_url VARCHAR(500) NULL COMMENT '头像URL',
+  role VARCHAR(32) NOT NULL DEFAULT 'MERCHANT' COMMENT '角色',
+  status TINYINT NOT NULL DEFAULT 1 COMMENT '状态：0禁用，1正常',
+  session_version INT UNSIGNED NOT NULL DEFAULT 1 COMMENT '会话版本',
+  last_login_time DATETIME(3) NULL COMMENT '最后登录时间',
+  create_time DATETIME(3) NOT NULL COMMENT '创建时间',
+  update_time DATETIME(3) NOT NULL COMMENT '更新时间',
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_merchant_account_username (username),
+  KEY idx_merchant_account_shop_status (shop_id, status),
+  CONSTRAINT chk_merchant_account_algorithm CHECK (password_algorithm = 'BCRYPT'),
+  CONSTRAINT chk_merchant_account_role CHECK (role = 'MERCHANT'),
+  CONSTRAINT chk_merchant_account_status CHECK (status IN (0, 1)),
+  CONSTRAINT chk_merchant_account_session_version CHECK (session_version >= 1)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='商家账号';
+
+CREATE TABLE IF NOT EXISTS product (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
+  shop_id BIGINT UNSIGNED NOT NULL COMMENT '所属店铺ID',
+  category_id BIGINT UNSIGNED NOT NULL COMMENT '所属分类ID',
+  name VARCHAR(100) NOT NULL COMMENT '商品名称',
+  image_url VARCHAR(500) NOT NULL COMMENT '商品图片URL',
+  description VARCHAR(255) NULL COMMENT '商品简介',
+  detail TEXT NULL COMMENT '商品详情',
+  price DECIMAL(10,2) NOT NULL COMMENT '基础价格',
+  original_price DECIMAL(10,2) NULL COMMENT '划线价',
+  stock INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '商品级库存',
+  status TINYINT NOT NULL DEFAULT 0 COMMENT '状态：0下架，1上架，2售罄',
+  recommended TINYINT NOT NULL DEFAULT 0 COMMENT '是否推荐',
+  deleted TINYINT NOT NULL DEFAULT 0 COMMENT '逻辑删除：0否，1是',
+  version INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '乐观锁版本',
+  create_time DATETIME(3) NOT NULL COMMENT '创建时间',
+  update_time DATETIME(3) NOT NULL COMMENT '更新时间',
+  PRIMARY KEY (id),
+  KEY idx_product_shop_category_status_deleted (shop_id, category_id, status, deleted),
+  KEY idx_product_shop_recommended_status (shop_id, recommended, status, deleted),
+  CONSTRAINT chk_product_price CHECK (price > 0),
+  CONSTRAINT chk_product_original_price CHECK (original_price IS NULL OR original_price >= 0),
+  CONSTRAINT chk_product_status CHECK (status IN (0, 1, 2)),
+  CONSTRAINT chk_product_recommended CHECK (recommended IN (0, 1)),
+  CONSTRAINT chk_product_deleted CHECK (deleted IN (0, 1))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='商品';
+
+CREATE TABLE IF NOT EXISTS product_specification (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
+  product_id BIGINT UNSIGNED NOT NULL COMMENT '商品ID',
+  name VARCHAR(64) NOT NULL COMMENT '规格名称',
+  price_delta DECIMAL(10,2) NOT NULL DEFAULT 0.00 COMMENT '规格加价',
+  status TINYINT NOT NULL DEFAULT 1 COMMENT '状态：0禁用，1启用',
+  sort INT NOT NULL DEFAULT 0 COMMENT '展示顺序',
+  deleted TINYINT NOT NULL DEFAULT 0 COMMENT '逻辑删除：0否，1是',
+  create_time DATETIME(3) NOT NULL COMMENT '创建时间',
+  update_time DATETIME(3) NOT NULL COMMENT '更新时间',
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_product_spec_product_name_deleted (product_id, name, deleted),
+  KEY idx_product_spec_product_status_sort (product_id, status, sort),
+  CONSTRAINT chk_product_spec_status CHECK (status IN (0, 1)),
+  CONSTRAINT chk_product_spec_deleted CHECK (deleted IN (0, 1))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='商品规格';
+
+CREATE TABLE IF NOT EXISTS product_taste (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
+  product_id BIGINT UNSIGNED NOT NULL COMMENT '商品ID',
+  name VARCHAR(64) NOT NULL COMMENT '口味名称',
+  status TINYINT NOT NULL DEFAULT 1 COMMENT '状态：0禁用，1启用',
+  sort INT NOT NULL DEFAULT 0 COMMENT '展示顺序',
+  deleted TINYINT NOT NULL DEFAULT 0 COMMENT '逻辑删除：0否，1是',
+  create_time DATETIME(3) NOT NULL COMMENT '创建时间',
+  update_time DATETIME(3) NOT NULL COMMENT '更新时间',
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_product_taste_product_name_deleted (product_id, name, deleted),
+  KEY idx_product_taste_product_status_sort (product_id, status, sort),
+  CONSTRAINT chk_product_taste_status CHECK (status IN (0, 1)),
+  CONSTRAINT chk_product_taste_deleted CHECK (deleted IN (0, 1))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='商品口味';
+
+CREATE TABLE IF NOT EXISTS shopping_cart (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
+  user_id BIGINT UNSIGNED NOT NULL COMMENT '用户ID',
+  shop_id BIGINT UNSIGNED NOT NULL COMMENT '店铺ID',
+  product_id BIGINT UNSIGNED NOT NULL COMMENT '商品ID',
+  specification_id BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '规格ID，0表示无规格',
+  taste_id BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '口味ID，0表示无口味',
+  quantity INT UNSIGNED NOT NULL COMMENT '数量',
+  create_time DATETIME(3) NOT NULL COMMENT '创建时间',
+  update_time DATETIME(3) NOT NULL COMMENT '更新时间',
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_cart_user_product_option (user_id, product_id, specification_id, taste_id),
+  KEY idx_cart_user_shop (user_id, shop_id),
+  CONSTRAINT chk_cart_quantity CHECK (quantity > 0)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='购物车';
+
+CREATE TABLE IF NOT EXISTS address (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
+  user_id BIGINT UNSIGNED NOT NULL COMMENT '用户ID',
+  contact_name VARCHAR(64) NOT NULL COMMENT '联系人',
+  gender TINYINT NULL COMMENT '性别',
+  phone VARCHAR(20) NOT NULL COMMENT '联系电话',
+  area VARCHAR(120) NOT NULL COMMENT '区域',
+  detail VARCHAR(255) NOT NULL COMMENT '详细地址',
+  house_number VARCHAR(100) NULL COMMENT '门牌号',
+  tag VARCHAR(32) NULL COMMENT '地址标签',
+  is_default TINYINT NOT NULL DEFAULT 0 COMMENT '是否默认地址',
+  deleted TINYINT NOT NULL DEFAULT 0 COMMENT '逻辑删除：0否，1是',
+  create_time DATETIME(3) NOT NULL COMMENT '创建时间',
+  update_time DATETIME(3) NOT NULL COMMENT '更新时间',
+  PRIMARY KEY (id),
+  KEY idx_address_user_deleted_default (user_id, deleted, is_default),
+  CONSTRAINT chk_address_is_default CHECK (is_default IN (0, 1)),
+  CONSTRAINT chk_address_deleted CHECK (deleted IN (0, 1))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='用户地址';
+
+CREATE TABLE IF NOT EXISTS orders (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
+  order_no VARCHAR(32) NOT NULL COMMENT '业务订单号',
+  idempotency_key VARCHAR(64) NOT NULL COMMENT '下单幂等键',
+  user_id BIGINT UNSIGNED NOT NULL COMMENT '用户ID',
+  shop_id BIGINT UNSIGNED NOT NULL COMMENT '店铺ID',
+  order_type TINYINT NOT NULL COMMENT '订单类型：1堂食，2配送',
+  status TINYINT NOT NULL COMMENT '订单状态：1至9',
+  total_amount DECIMAL(10,2) NOT NULL COMMENT '商品总额',
+  delivery_fee DECIMAL(10,2) NOT NULL DEFAULT 0.00 COMMENT '配送费快照',
+  package_fee DECIMAL(10,2) NOT NULL DEFAULT 0.00 COMMENT '包装费快照',
+  pay_amount DECIMAL(10,2) NOT NULL COMMENT '订单应付金额快照',
+  contact_name VARCHAR(64) NOT NULL COMMENT '联系人快照',
+  contact_phone VARCHAR(20) NOT NULL COMMENT '联系电话快照',
+  table_no VARCHAR(32) NULL COMMENT '桌号',
+  no_seat_yet TINYINT NOT NULL DEFAULT 0 COMMENT '是否暂未入座',
+  address_id BIGINT UNSIGNED NULL COMMENT '原地址ID',
+  address_area VARCHAR(120) NULL COMMENT '配送区域快照',
+  address_detail VARCHAR(255) NULL COMMENT '详细地址快照',
+  address_house_number VARCHAR(100) NULL COMMENT '门牌号快照',
+  delivery_range_snapshot VARCHAR(500) NULL COMMENT '配送范围说明快照',
+  remark VARCHAR(500) NULL COMMENT '订单备注',
+  reject_reason VARCHAR(255) NULL COMMENT '拒单原因',
+  version INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '乐观锁版本',
+  accept_time DATETIME(3) NULL COMMENT '接单时间',
+  cooking_time DATETIME(3) NULL COMMENT '开始制作时间',
+  ready_time DATETIME(3) NULL COMMENT '待取餐时间',
+  delivery_time DATETIME(3) NULL COMMENT '开始配送时间',
+  delivered_time DATETIME(3) NULL COMMENT '送达时间',
+  cancel_time DATETIME(3) NULL COMMENT '取消或拒单时间',
+  finish_time DATETIME(3) NULL COMMENT '完成时间',
+  create_time DATETIME(3) NOT NULL COMMENT '创建时间',
+  update_time DATETIME(3) NOT NULL COMMENT '更新时间',
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_orders_order_no (order_no),
+  UNIQUE KEY uk_orders_user_idempotency (user_id, idempotency_key),
+  KEY idx_orders_user_create (user_id, create_time),
+  KEY idx_orders_shop_status_create (shop_id, status, create_time),
+  KEY idx_orders_shop_type_status_create (shop_id, order_type, status, create_time),
+  KEY idx_orders_shop_phone (shop_id, contact_phone),
+  CONSTRAINT chk_orders_type CHECK (order_type IN (1, 2)),
+  CONSTRAINT chk_orders_status CHECK (status BETWEEN 1 AND 9),
+  CONSTRAINT chk_orders_total_amount CHECK (total_amount >= 0),
+  CONSTRAINT chk_orders_delivery_fee CHECK (delivery_fee >= 0),
+  CONSTRAINT chk_orders_package_fee CHECK (package_fee >= 0),
+  CONSTRAINT chk_orders_pay_amount CHECK (pay_amount >= 0),
+  CONSTRAINT chk_orders_no_seat_yet CHECK (no_seat_yet IN (0, 1))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='订单';
+
+CREATE TABLE IF NOT EXISTS order_item (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
+  order_id BIGINT UNSIGNED NOT NULL COMMENT '订单ID',
+  product_id BIGINT UNSIGNED NOT NULL COMMENT '商品ID',
+  product_name VARCHAR(100) NOT NULL COMMENT '商品名称快照',
+  product_image_url VARCHAR(500) NOT NULL COMMENT '商品图片快照',
+  specification_id BIGINT UNSIGNED NULL COMMENT '规格ID',
+  specification_name VARCHAR(64) NULL COMMENT '规格名称快照',
+  taste_id BIGINT UNSIGNED NULL COMMENT '口味ID',
+  taste_name VARCHAR(64) NULL COMMENT '口味名称快照',
+  unit_price DECIMAL(10,2) NOT NULL COMMENT '最终单价快照',
+  quantity INT UNSIGNED NOT NULL COMMENT '数量',
+  amount DECIMAL(10,2) NOT NULL COMMENT '明细金额',
+  create_time DATETIME(3) NOT NULL COMMENT '创建时间',
+  update_time DATETIME(3) NOT NULL COMMENT '更新时间',
+  PRIMARY KEY (id),
+  KEY idx_order_item_order (order_id),
+  KEY idx_order_item_product_create (product_id, create_time),
+  CONSTRAINT chk_order_item_unit_price CHECK (unit_price > 0),
+  CONSTRAINT chk_order_item_quantity CHECK (quantity > 0),
+  CONSTRAINT chk_order_item_amount CHECK (amount > 0)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='订单明细';
+
+CREATE TABLE IF NOT EXISTS order_status_log (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
+  order_id BIGINT UNSIGNED NOT NULL COMMENT '订单ID',
+  from_status TINYINT NULL COMMENT '原状态，初始日志为空',
+  to_status TINYINT NOT NULL COMMENT '目标状态',
+  operator_type VARCHAR(20) NOT NULL COMMENT '操作人类型',
+  operator_id BIGINT UNSIGNED NULL COMMENT '操作人ID',
+  reason VARCHAR(255) NULL COMMENT '状态变化原因',
+  order_version INT UNSIGNED NOT NULL COMMENT '变更后的订单版本',
+  create_time DATETIME(3) NOT NULL COMMENT '创建时间',
+  update_time DATETIME(3) NOT NULL COMMENT '更新时间',
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_order_status_log_order_version (order_id, order_version),
+  KEY idx_order_status_log_order_create (order_id, create_time),
+  CONSTRAINT chk_order_status_log_from CHECK (from_status IS NULL OR from_status BETWEEN 1 AND 9),
+  CONSTRAINT chk_order_status_log_to CHECK (to_status BETWEEN 1 AND 9),
+  CONSTRAINT chk_order_status_log_operator CHECK (operator_type IN ('USER', 'MERCHANT', 'SYSTEM'))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='订单状态日志';
+
+-- M1 保留的 MyBatis-Plus 与 Mapper XML 基础能力示范表，不属于核心业务表。
 CREATE TABLE IF NOT EXISTS system_config (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
   config_key VARCHAR(100) NOT NULL COMMENT '配置键',

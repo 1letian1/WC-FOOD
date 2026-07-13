@@ -71,7 +71,7 @@ WC-Food/
 
 内容：建表脚本、枚举编码、Entity/Mapper、自动填充、分页、开发测试数据。
 
-当前进度：已完成公开店铺信息查询和用户端公开分类查询两个垂直切片，包括 `shop/category` 表、稳定状态编码、逻辑删除、Entity/Mapper/XML、Service、公开 Controller 与测试；M2 其余核心表仍待后续切片完成。
+当前进度：已完成。12 张核心业务表、索引与约束、稳定状态编码、Entity/Mapper、自动填充、逻辑删除、乐观锁、分页限制及非生产开发数据均已落地；公开店铺信息查询和用户端公开分类查询两个既有垂直切片保持可用。`system_config` 为 M1 保留的 MyBatis-Plus/Mapper XML 基础能力示范表，不属于业务核心表。
 
 验收：
 
