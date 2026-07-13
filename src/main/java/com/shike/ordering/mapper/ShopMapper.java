@@ -8,4 +8,5 @@ import org.apache.ibatis.annotations.Param;
 @Mapper
 public interface ShopMapper extends BaseMapper<Shop> {
     Shop selectPublicShopById(@Param("shopId") Long shopId);
+    Shop selectByIdForUpdate(@Param("shopId") Long shopId);
 }

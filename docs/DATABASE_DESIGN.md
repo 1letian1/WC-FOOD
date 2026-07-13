@@ -220,7 +220,7 @@ user ─┬─ address
 
 ## 4. 关键约束与事务
 
-- 下单：查询有效商品/选项 → 后端重算 → 条件扣库存 → 插入订单及明细/初始日志，同一事务；幂等唯一索引兜底。
+- 下单：按当前用户锁串行化购物车与地址写入，锁定店铺履约配置并查询、锁定本人选中条目涉及的当前商品/选项 → 后端重算 → 条件扣库存 → 插入订单及明细/初始日志 → 清理选中购物车项，同一事务；幂等唯一索引兜底。配送联系人和完整地址从本人地址生成快照，堂食地址与配送费固定为空/零。
 - 状态变更：`id + owner/shop + expected_status + version` 条件更新；成功后写唯一版本日志。
 - 取消/拒单：状态更新、逐项恢复库存、日志同事务；只有从 `PENDING_ACCEPT` 成功转换者恢复。
 - 商品/地址逻辑删除不影响订单快照；历史订单不依赖当前名称、价格或地址。
@@ -237,7 +237,7 @@ user ─┬─ address
 | `auth:merchant:tokens:{merchantId}` | 该商家 Token 集合，支持全部失效 | 不短于会话 TTL，并同步清理 |
 | `shop:status:{shopId}` | 营业开关缓存 | 建议 5 分钟 |
 | `shop:config:{shopId}` | 展示/配送配置缓存 | 建议 10 分钟 |
-| `order:submit:idempotency:{userId}:{key}` | PROCESSING/订单号；Lua 原子占位 | 建议 24 小时 |
+| `order:submit:idempotency:{userId}:{key}` | `SET NX EX` 原子写入 PROCESSING；事务提交后改为订单号，回滚后删除 | 24 小时 |
 | `order:no:{yyyyMMdd}` | `INCR` 当日流水 | 首次设置 3 天 |
 
 Redis 故障不能造成静默重复订单号；数据库唯一索引是最终兜底。店铺配置以 MySQL 为准，更新提交后删除/更新缓存。第一版不使用 Redisson 和分布式锁。

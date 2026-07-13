@@ -85,15 +85,21 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void delete(Long id) {
+        Long userId = userId();
+        userMapper.selectIdForUpdate(userId);
         int deleted = cartMapper.delete(new LambdaQueryWrapper<ShoppingCart>()
-                .eq(ShoppingCart::getId, id).eq(ShoppingCart::getUserId, userId()));
+                .eq(ShoppingCart::getId, id).eq(ShoppingCart::getUserId, userId));
         if (deleted == 0) throw new ResourceNotFoundException(ErrorCode.CART_ITEM_NOT_FOUND);
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void clear() {
-        cartMapper.delete(new LambdaQueryWrapper<ShoppingCart>().eq(ShoppingCart::getUserId, userId()));
+        Long userId = userId();
+        userMapper.selectIdForUpdate(userId);
+        cartMapper.delete(new LambdaQueryWrapper<ShoppingCart>().eq(ShoppingCart::getUserId, userId));
     }
 
     private Product requireAvailableProduct(Long productId) {

@@ -40,4 +40,17 @@
         </if>
         ORDER BY p.recommended DESC, p.id DESC
     </select>
+
+    <!-- 下单条件扣库存：状态、归属和库存任一变化都返回 0 行。 -->
+    <update id="deductStock">
+        UPDATE product
+        SET stock = stock - #{quantity},
+            version = version + 1,
+            update_time = NOW(3)
+        WHERE id = #{productId}
+          AND shop_id = #{shopId}
+          AND stock &gt;= #{quantity}
+          AND status = 1
+          AND deleted = 0
+    </update>
 </mapper>

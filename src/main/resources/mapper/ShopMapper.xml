@@ -32,4 +32,15 @@
         WHERE s.id = #{shopId}
         LIMIT 1
     </select>
+
+    <!-- 下单读取并锁定店铺履约配置，保证开关和费用快照在事务内稳定。 -->
+    <select id="selectByIdForUpdate" resultMap="ShopResultMap">
+        SELECT s.id, s.name, s.logo_url, s.phone, s.address, s.notice, s.business_hours,
+               s.business_status, s.dine_in_enabled, s.delivery_enabled, s.delivery_fee,
+               s.min_delivery_amount, s.package_fee, s.delivery_range,
+               s.estimated_delivery_minutes, s.version, s.create_time, s.update_time
+        FROM shop s
+        WHERE s.id = #{shopId}
+        FOR UPDATE
+    </select>
 </mapper>

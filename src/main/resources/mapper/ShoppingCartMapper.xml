@@ -16,6 +16,26 @@
         <result property="available" column="available"/>
     </resultMap>
 
+    <resultMap id="OrderCartItemResultMap" type="com.shike.ordering.mapper.projection.OrderCartItemProjection">
+        <id property="cartId" column="cart_id"/>
+        <result property="shopId" column="shop_id"/>
+        <result property="productId" column="product_id"/>
+        <result property="productName" column="product_name"/>
+        <result property="productImageUrl" column="product_image_url"/>
+        <result property="productStatus" column="product_status"/>
+        <result property="productStock" column="product_stock"/>
+        <result property="productExists" column="product_exists"/>
+        <result property="categoryAvailable" column="category_available"/>
+        <result property="specificationId" column="specification_id"/>
+        <result property="specificationName" column="specification_name"/>
+        <result property="specificationValid" column="specification_valid"/>
+        <result property="tasteId" column="taste_id"/>
+        <result property="tasteName" column="taste_name"/>
+        <result property="tasteValid" column="taste_valid"/>
+        <result property="unitPrice" column="unit_price"/>
+        <result property="quantity" column="quantity"/>
+    </resultMap>
+
     <!-- 购物车预览使用当前商品和规格价格，不把购物车价格作为结算依据。 -->
     <select id="selectUserCart" resultMap="CartItemResultMap">
         SELECT c.id,
@@ -31,7 +51,11 @@
                (COALESCE(p.price, 0.00) + COALESCE(ps.price_delta, 0.00)) * c.quantity AS amount,
                CASE WHEN p.id IS NOT NULL AND p.deleted = 0 AND p.status = 1
                          AND p.stock >= c.quantity AND cat.id IS NOT NULL AND cat.deleted = 0 AND cat.status = 1
-                         AND (c.specification_id = 0 OR (ps.id IS NOT NULL AND ps.deleted = 0 AND ps.status = 1))
+                         AND ((c.specification_id = 0 AND NOT EXISTS (
+                                  SELECT 1 FROM product_specification active_ps
+                                  WHERE active_ps.product_id = c.product_id
+                                    AND active_ps.deleted = 0 AND active_ps.status = 1
+                              )) OR (ps.id IS NOT NULL AND ps.deleted = 0 AND ps.status = 1))
                          AND (c.taste_id = 0 OR (pt.id IS NOT NULL AND pt.deleted = 0 AND pt.status = 1))
                     THEN 1 ELSE 0 END AS available
         FROM shopping_cart c
@@ -41,5 +65,44 @@
         LEFT JOIN product_taste pt ON pt.id = c.taste_id AND pt.product_id = c.product_id
         WHERE c.user_id = #{userId}
         ORDER BY c.id DESC
+    </select>
+
+    <!-- 下单快照：一次读取本人选中购物车项及当前商品、规格、口味状态和价格。 -->
+    <select id="selectOrderItems" resultMap="OrderCartItemResultMap">
+        SELECT c.id AS cart_id,
+               c.shop_id,
+               c.product_id,
+               p.name AS product_name,
+               p.image_url AS product_image_url,
+               p.status AS product_status,
+               p.stock AS product_stock,
+               CASE WHEN p.id IS NOT NULL AND p.deleted = 0 THEN 1 ELSE 0 END AS product_exists,
+               CASE WHEN cat.id IS NOT NULL AND cat.deleted = 0 AND cat.status = 1 THEN 1 ELSE 0 END AS category_available,
+               NULLIF(c.specification_id, 0) AS specification_id,
+               ps.name AS specification_name,
+               CASE WHEN (c.specification_id = 0 AND NOT EXISTS (
+                                  SELECT 1 FROM product_specification active_ps
+                                  WHERE active_ps.product_id = c.product_id
+                                    AND active_ps.deleted = 0 AND active_ps.status = 1
+                              )) OR (ps.id IS NOT NULL AND ps.deleted = 0 AND ps.status = 1)
+                    THEN 1 ELSE 0 END AS specification_valid,
+               NULLIF(c.taste_id, 0) AS taste_id,
+               pt.name AS taste_name,
+               CASE WHEN c.taste_id = 0 OR (pt.id IS NOT NULL AND pt.deleted = 0 AND pt.status = 1)
+                    THEN 1 ELSE 0 END AS taste_valid,
+               COALESCE(p.price, 0.00) + COALESCE(ps.price_delta, 0.00) AS unit_price,
+               c.quantity
+        FROM shopping_cart c
+        LEFT JOIN product p ON p.id = c.product_id AND p.shop_id = c.shop_id
+        LEFT JOIN category cat ON cat.id = p.category_id AND cat.shop_id = p.shop_id
+        LEFT JOIN product_specification ps ON ps.id = c.specification_id AND ps.product_id = c.product_id
+        LEFT JOIN product_taste pt ON pt.id = c.taste_id AND pt.product_id = c.product_id
+        WHERE c.user_id = #{userId}
+          AND c.id IN
+          <foreach collection="cartItemIds" item="cartItemId" open="(" separator="," close=")">
+              #{cartItemId}
+          </foreach>
+        ORDER BY c.id
+        FOR UPDATE
     </select>
 </mapper>

@@ -11,4 +11,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 public interface ProductMapper extends BaseMapper<Product> {
     IPage<Product> selectUserPage(Page<Product> page, @Param("shopId") Long shopId,
                                   @Param("categoryId") Long categoryId, @Param("keyword") String keyword);
+
+    int deductStock(@Param("productId") Long productId, @Param("shopId") Long shopId,
+                    @Param("quantity") Integer quantity);
 }
