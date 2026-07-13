@@ -3,6 +3,7 @@ package com.shike.ordering.controller.user;
 import com.shike.ordering.common.exception.GlobalExceptionHandler;
 import com.shike.ordering.common.filter.RequestIdFilter;
 import com.shike.ordering.service.user.OrderCreationService;
+import com.shike.ordering.service.user.UserOrderService;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -14,7 +15,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class OrderControllerTest {
     private final MockMvc mockMvc = MockMvcBuilders.standaloneSetup(
-                    new OrderController(mock(OrderCreationService.class)))
+                    new OrderController(mock(OrderCreationService.class), mock(UserOrderService.class)))
             .setControllerAdvice(new GlobalExceptionHandler())
             .addFilters(new RequestIdFilter())
             .build();

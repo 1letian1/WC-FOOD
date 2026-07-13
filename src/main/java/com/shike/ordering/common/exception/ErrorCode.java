@@ -28,6 +28,7 @@ public enum ErrorCode {
     CART_QUANTITY_EXCEEDED(50004, "购物车商品数量不能超过99", HttpStatus.BAD_REQUEST),
     ORDER_NOT_FOUND(60001, "订单不存在", HttpStatus.NOT_FOUND),
     ORDER_STATE_CONFLICT(60002, "订单状态已变化，请刷新后重试", HttpStatus.CONFLICT),
+    ORDER_FORBIDDEN(60003, "无权操作该订单", HttpStatus.FORBIDDEN),
     DUPLICATE_OPERATION(60004, "请求重复，请勿重复操作", HttpStatus.CONFLICT),
     SHOP_CLOSED(70001, "店铺休息中", HttpStatus.CONFLICT),
     DINE_IN_DISABLED(70002, "堂食暂停", HttpStatus.CONFLICT),

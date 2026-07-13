@@ -14,4 +14,6 @@ public interface ProductMapper extends BaseMapper<Product> {
 
     int deductStock(@Param("productId") Long productId, @Param("shopId") Long shopId,
                     @Param("quantity") Integer quantity);
+    int restoreStock(@Param("productId") Long productId, @Param("shopId") Long shopId,
+                     @Param("quantity") Integer quantity);
 }

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shike.ordering.mapper.OrderItemMapper">
+  <select id="selectByOrderId" resultType="com.shike.ordering.entity.OrderItem">
+    SELECT oi.id,oi.order_id,oi.product_id,oi.product_name,oi.product_image_url,oi.specification_id,
+      oi.specification_name,oi.taste_id,oi.taste_name,oi.unit_price,oi.quantity,oi.amount,
+      oi.create_time,oi.update_time FROM order_item oi WHERE oi.order_id=#{orderId} ORDER BY oi.id
+  </select>
+</mapper>

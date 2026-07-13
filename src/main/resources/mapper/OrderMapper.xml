@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shike.ordering.mapper.OrderMapper">
+  <resultMap id="OrderResultMap" type="com.shike.ordering.entity.Order">
+    <id property="id" column="id"/><result property="orderNo" column="order_no"/>
+    <result property="idempotencyKey" column="idempotency_key"/><result property="userId" column="user_id"/>
+    <result property="shopId" column="shop_id"/><result property="orderType" column="order_type"/>
+    <result property="status" column="status"/><result property="totalAmount" column="total_amount"/>
+    <result property="deliveryFee" column="delivery_fee"/><result property="packageFee" column="package_fee"/>
+    <result property="payAmount" column="pay_amount"/><result property="contactName" column="contact_name"/>
+    <result property="contactPhone" column="contact_phone"/><result property="tableNo" column="table_no"/>
+    <result property="noSeatYet" column="no_seat_yet"/><result property="addressId" column="address_id"/>
+    <result property="addressArea" column="address_area"/><result property="addressDetail" column="address_detail"/>
+    <result property="addressHouseNumber" column="address_house_number"/>
+    <result property="deliveryRangeSnapshot" column="delivery_range_snapshot"/>
+    <result property="remark" column="remark"/><result property="rejectReason" column="reject_reason"/>
+    <result property="version" column="version"/><result property="acceptTime" column="accept_time"/>
+    <result property="cookingTime" column="cooking_time"/><result property="readyTime" column="ready_time"/>
+    <result property="deliveryTime" column="delivery_time"/><result property="deliveredTime" column="delivered_time"/>
+    <result property="cancelTime" column="cancel_time"/><result property="finishTime" column="finish_time"/>
+    <result property="createTime" column="create_time"/><result property="updateTime" column="update_time"/>
+  </resultMap>
+  <resultMap id="SummaryMap" type="com.shike.ordering.mapper.projection.OrderSummaryProjection">
+    <id property="id" column="id"/><result property="orderNo" column="order_no"/>
+    <result property="orderType" column="order_type"/><result property="status" column="status"/>
+    <result property="userNickname" column="user_nickname"/><result property="contactName" column="contact_name"/>
+    <result property="tableNo" column="table_no"/><result property="addressSummary" column="address_summary"/>
+    <result property="productSummary" column="product_summary"/><result property="productImageUrl" column="product_image_url"/>
+    <result property="totalQuantity" column="total_quantity"/><result property="payAmount" column="pay_amount"/>
+    <result property="createTime" column="create_time"/>
+  </resultMap>
+  <sql id="OrderColumns">o.id,o.order_no,o.idempotency_key,o.user_id,o.shop_id,o.order_type,o.status,
+    o.total_amount,o.delivery_fee,o.package_fee,o.pay_amount,o.contact_name,o.contact_phone,o.table_no,
+    o.no_seat_yet,o.address_id,o.address_area,o.address_detail,o.address_house_number,o.delivery_range_snapshot,
+    o.remark,o.reject_reason,o.version,o.accept_time,o.cooking_time,o.ready_time,o.delivery_time,
+    o.delivered_time,o.cancel_time,o.finish_time,o.create_time,o.update_time</sql>
+  <sql id="SummaryColumns">o.id,o.order_no,o.order_type,o.status,u.nickname AS user_nickname,o.contact_name,o.table_no,
+    CONCAT_WS('',o.address_area,o.address_detail,o.address_house_number) AS address_summary,
+    GROUP_CONCAT(oi.product_name ORDER BY oi.id SEPARATOR '、') AS product_summary,
+    SUBSTRING_INDEX(GROUP_CONCAT(oi.product_image_url ORDER BY oi.id SEPARATOR ','),',',1) AS product_image_url,
+    COALESCE(SUM(oi.quantity),0) AS total_quantity,o.pay_amount,o.create_time</sql>
+  <!-- 归属条件在 SQL 内完成，商品明细一次聚合，避免分页后的 N+1 查询。 -->
+  <select id="selectUserPage" resultMap="SummaryMap">SELECT <include refid="SummaryColumns"/> FROM orders o
+    INNER JOIN `user` u ON u.id=o.user_id LEFT JOIN order_item oi ON oi.order_id=o.id WHERE o.user_id=#{userId}
+    <if test="orderType != null">AND o.order_type=#{orderType}</if><if test="status != null">AND o.status=#{status}</if>
+    GROUP BY o.id,o.order_no,o.order_type,o.status,u.nickname,o.contact_name,o.table_no,o.address_area,
+      o.address_detail,o.address_house_number,o.pay_amount,o.create_time ORDER BY o.create_time DESC,o.id DESC</select>
+  <select id="selectMerchantPage" resultMap="SummaryMap">SELECT <include refid="SummaryColumns"/> FROM orders o
+    INNER JOIN `user` u ON u.id=o.user_id LEFT JOIN order_item oi ON oi.order_id=o.id WHERE o.shop_id=#{shopId}
+    <if test="orderType != null">AND o.order_type=#{orderType}</if><if test="status != null">AND o.status=#{status}</if>
+    <if test="keyword != null and keyword != ''">AND (o.order_no LIKE CONCAT('%',#{keyword},'%')
+      OR o.contact_phone LIKE CONCAT('%',#{keyword},'%') OR u.nickname LIKE CONCAT('%',#{keyword},'%'))</if>
+    GROUP BY o.id,o.order_no,o.order_type,o.status,u.nickname,o.contact_name,o.table_no,o.address_area,
+      o.address_detail,o.address_house_number,o.pay_amount,o.create_time ORDER BY o.create_time DESC,o.id DESC</select>
+  <select id="selectUserOrder" resultMap="OrderResultMap">SELECT <include refid="OrderColumns"/> FROM orders o WHERE o.id=#{id} AND o.user_id=#{userId}</select>
+  <select id="selectMerchantOrder" resultMap="OrderResultMap">SELECT <include refid="OrderColumns"/> FROM orders o WHERE o.id=#{id} AND o.shop_id=#{shopId}</select>
+  <select id="selectUserNickname" resultType="java.lang.String">SELECT u.nickname FROM `user` u WHERE u.id=#{userId}</select>
+  <select id="selectDashboard" resultType="com.shike.ordering.mapper.projection.OrderDashboardProjection">SELECT
+    COALESCE(SUM(CASE WHEN o.create_time&gt;=CURRENT_DATE AND o.create_time&lt;CURRENT_DATE+INTERVAL 1 DAY AND o.status NOT IN(8,9) THEN 1 ELSE 0 END),0) AS today_order_count,
+    COALESCE(SUM(CASE WHEN o.finish_time&gt;=CURRENT_DATE AND o.finish_time&lt;CURRENT_DATE+INTERVAL 1 DAY AND o.status=7 THEN o.pay_amount ELSE 0 END),0.00) AS today_turnover,
+    COALESCE(SUM(CASE WHEN o.status=1 THEN 1 ELSE 0 END),0) AS pending_accept_count,
+    COALESCE(SUM(CASE WHEN o.status=3 THEN 1 ELSE 0 END),0) AS cooking_count,
+    COALESCE(SUM(CASE WHEN o.order_type=1 AND o.status=4 THEN 1 ELSE 0 END),0) AS ready_for_pickup_count,
+    COALESCE(SUM(CASE WHEN o.order_type=2 AND o.status=5 THEN 1 ELSE 0 END),0) AS delivering_count
+    FROM orders o WHERE o.shop_id=#{shopId}</select>
+  <sql id="TransitionSet">status=#{targetStatus},version=version+1,update_time=NOW(3),
+    <if test="targetStatus == 2">accept_time=NOW(3),</if><if test="targetStatus == 3">cooking_time=NOW(3),</if>
+    <if test="targetStatus == 4">ready_time=NOW(3),</if><if test="targetStatus == 5">delivery_time=NOW(3),</if>
+    <if test="targetStatus == 6">delivered_time=NOW(3),</if><if test="targetStatus == 7">finish_time=NOW(3),</if>
+    <if test="targetStatus == 8">cancel_time=NOW(3),</if><if test="targetStatus == 9">reject_reason=#{rejectReason},</if></sql>
+  <update id="transitionUserOrder">UPDATE orders <set><include refid="TransitionSet"/></set>
+    WHERE id=#{id} AND user_id=#{userId} AND status=#{expectedStatus} AND version=#{version}</update>
+  <update id="transitionMerchantOrder">UPDATE orders <set><include refid="TransitionSet"/></set>
+    WHERE id=#{id} AND shop_id=#{shopId} AND status=#{expectedStatus} AND version=#{version}</update>
+</mapper>

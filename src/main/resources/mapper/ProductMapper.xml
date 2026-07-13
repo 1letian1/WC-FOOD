@@ -53,4 +53,9 @@
           AND status = 1
           AND deleted = 0
     </update>
+    <!-- 恢复历史订单库存不受商品当前上下架和逻辑删除状态影响。 -->
+    <update id="restoreStock">
+        UPDATE product SET stock=stock+#{quantity},version=version+1,update_time=NOW(3)
+        WHERE id=#{productId} AND shop_id=#{shopId}
+    </update>
 </mapper>
