@@ -7,6 +7,7 @@ import com.shike.ordering.dto.common.ShopQueryDTO;
 import com.shike.ordering.entity.Shop;
 import com.shike.ordering.mapper.ShopMapper;
 import com.shike.ordering.service.common.ShopQueryService;
+import com.shike.ordering.service.common.ShopCacheService;
 import com.shike.ordering.vo.common.ShopPublicVO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,14 +21,19 @@ import org.springframework.validation.annotation.Validated;
 public class ShopQueryServiceImpl implements ShopQueryService {
     private final ShopMapper shopMapper;
     private final ShopConverter shopConverter;
+    private final ShopCacheService shopCacheService;
 
     @Override
     @Transactional(readOnly = true)
     public ShopPublicVO getPublicShop(@Valid ShopQueryDTO query) {
+        var cached = shopCacheService.get(query.shopId());
+        if (cached.isPresent()) return cached.get();
         Shop shop = shopMapper.selectPublicShopById(query.shopId());
         if (shop == null) {
             throw new ResourceNotFoundException(ErrorCode.SHOP_NOT_FOUND);
         }
-        return shopConverter.toPublicVO(shop);
+        ShopPublicVO result = shopConverter.toPublicVO(shop);
+        shopCacheService.put(query.shopId(), result);
+        return result;
     }
 }

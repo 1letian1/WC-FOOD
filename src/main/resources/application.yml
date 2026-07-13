@@ -16,6 +16,10 @@ spring:
       timeout: 3s
   jackson:
     time-zone: Asia/Shanghai
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
 mybatis-plus:
   mapper-locations: classpath*:/mapper/**/*.xml
   configuration:
@@ -47,6 +51,10 @@ shike:
     app-id: ${WECHAT_APP_ID:}
     app-secret: ${WECHAT_APP_SECRET:}
     mock-enabled: false
+  storage:
+    upload-path: ${UPLOAD_PATH:./uploads}
+    public-base-url: ${PUBLIC_FILE_BASE_URL:http://localhost:8080/files}
+    max-image-size: 5MB
   redis:
     key-prefix: "shike:"
   cors:

@@ -48,6 +48,31 @@ class AuthenticationFilterTest {
     }
 
     @Test
+    void doFilter_whenGettingPublicProducts_shouldNotReadSession() throws Exception {
+        RedisSessionService sessionService = mock(RedisSessionService.class);
+        AuthenticationFilter filter = new AuthenticationFilter(sessionService, new ObjectMapper().findAndRegisterModules());
+        FilterChain chain = mock(FilterChain.class);
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/user/products/1");
+
+        filter.doFilter(request, new MockHttpServletResponse(), chain);
+
+        verify(chain).doFilter(org.mockito.ArgumentMatchers.eq(request), org.mockito.ArgumentMatchers.any());
+        verifyNoInteractions(sessionService);
+    }
+
+    @Test
+    void doFilter_whenWritingUnderPublicProductPath_shouldStillRequireUserSession() throws Exception {
+        RedisSessionService sessionService = mock(RedisSessionService.class);
+        AuthenticationFilter filter = new AuthenticationFilter(sessionService, new ObjectMapper().findAndRegisterModules());
+        MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/user/products");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        filter.doFilter(request, response, mock(FilterChain.class));
+
+        assertThat(response.getStatus()).isEqualTo(401);
+    }
+
+    @Test
     void doFilter_whenSessionTypeDoesNotMatchRealm_shouldReturnUnauthorized() throws Exception {
         RedisSessionService sessionService = mock(RedisSessionService.class);
         AuthenticationFilter filter = new AuthenticationFilter(sessionService, new ObjectMapper().findAndRegisterModules());

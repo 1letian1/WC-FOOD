@@ -6,6 +6,7 @@ import com.shike.ordering.dto.common.ShopQueryDTO;
 import com.shike.ordering.entity.Shop;
 import com.shike.ordering.mapper.ShopMapper;
 import com.shike.ordering.vo.common.ShopPublicVO;
+import com.shike.ordering.service.common.ShopCacheService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -16,15 +17,19 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 class ShopQueryServiceImplTest {
     private ShopMapper shopMapper;
     private ShopQueryServiceImpl service;
+    private ShopCacheService cacheService;
 
     @BeforeEach
     void setUp() {
         shopMapper = mock(ShopMapper.class);
-        service = new ShopQueryServiceImpl(shopMapper, new ShopConverter());
+        cacheService = mock(ShopCacheService.class);
+        when(cacheService.get(1L)).thenReturn(java.util.Optional.empty());
+        service = new ShopQueryServiceImpl(shopMapper, new ShopConverter(), cacheService);
     }
 
     @Test
@@ -39,6 +44,7 @@ class ShopQueryServiceImplTest {
         assertThat(result.businessStatus().description()).isEqualTo("营业中");
         assertThat(result.deliveryFee()).isEqualByComparingTo("3.00");
         verify(shopMapper).selectPublicShopById(1L);
+        verify(cacheService).put(1L, result);
     }
 
     @Test
@@ -49,6 +55,17 @@ class ShopQueryServiceImplTest {
                 .isInstanceOf(ResourceNotFoundException.class)
                 .extracting("code")
                 .isEqualTo(70005);
+    }
+
+    @Test
+    void getPublicShop_whenCacheHits_shouldNotQueryDatabase() {
+        ShopPublicVO cached = new ShopConverter().toPublicVO(shop());
+        when(cacheService.get(1L)).thenReturn(java.util.Optional.of(cached));
+
+        ShopPublicVO result = service.getPublicShop(new ShopQueryDTO(1L));
+
+        assertThat(result).isSameAs(cached);
+        verifyNoInteractions(shopMapper);
     }
 
     private Shop shop() {

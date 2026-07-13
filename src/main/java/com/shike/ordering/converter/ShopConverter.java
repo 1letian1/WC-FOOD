@@ -5,6 +5,7 @@ import com.shike.ordering.common.enums.EnabledStatus;
 import com.shike.ordering.entity.Shop;
 import com.shike.ordering.vo.common.ShopPublicVO;
 import com.shike.ordering.vo.common.StatusVO;
+import com.shike.ordering.vo.merchant.ShopVO;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -19,6 +20,18 @@ public class ShopConverter {
                 status(deliveryStatus.getCode(), deliveryStatus.getDescription()), shop.getDeliveryFee(),
                 shop.getMinDeliveryAmount(), shop.getPackageFee(), shop.getDeliveryRange(),
                 shop.getEstimatedDeliveryMinutes());
+    }
+
+    public ShopVO toMerchantVO(Shop shop) {
+        BusinessStatus businessStatus = BusinessStatus.fromCode(shop.getBusinessStatus());
+        EnabledStatus dineInStatus = EnabledStatus.fromBoolean(Boolean.TRUE.equals(shop.getDineInEnabled()));
+        EnabledStatus deliveryStatus = EnabledStatus.fromBoolean(Boolean.TRUE.equals(shop.getDeliveryEnabled()));
+        return new ShopVO(shop.getId(), shop.getName(), shop.getLogoUrl(), shop.getPhone(), shop.getAddress(),
+                shop.getNotice(), shop.getBusinessHours(), status(businessStatus.getCode(), businessStatus.getDescription()),
+                status(dineInStatus.getCode(), dineInStatus.getDescription()),
+                status(deliveryStatus.getCode(), deliveryStatus.getDescription()), shop.getDeliveryFee(),
+                shop.getMinDeliveryAmount(), shop.getPackageFee(), shop.getDeliveryRange(),
+                shop.getEstimatedDeliveryMinutes(), shop.getVersion());
     }
 
     private StatusVO status(int code, String description) {

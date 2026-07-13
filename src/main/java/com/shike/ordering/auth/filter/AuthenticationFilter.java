@@ -28,9 +28,11 @@ public class AuthenticationFilter extends OncePerRequestFilter {
     private final ObjectMapper objectMapper;
     @Override protected boolean shouldNotFilter(HttpServletRequest request) {
         String uri = request.getRequestURI();
-        return !uri.startsWith("/api/user/") && !uri.startsWith("/api/merchant/")
-                || uri.equals("/api/user/auth/wechat-login") || uri.equals("/api/merchant/auth/login")
-                || uri.equals("/api/user/categories");
+        if (!uri.startsWith("/api/user/") && !uri.startsWith("/api/merchant/")) return true;
+        if (uri.equals("/api/user/auth/wechat-login") || uri.equals("/api/merchant/auth/login")) return true;
+        return "GET".equals(request.getMethod())
+                && (uri.equals("/api/user/categories") || uri.equals("/api/user/products")
+                    || uri.startsWith("/api/user/products/"));
     }
     @Override protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {

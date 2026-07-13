@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shike.ordering.mapper.ProductMapper">
+    <resultMap id="ProductResultMap" type="com.shike.ordering.entity.Product">
+        <id property="id" column="id"/>
+        <result property="shopId" column="shop_id"/>
+        <result property="categoryId" column="category_id"/>
+        <result property="name" column="name"/>
+        <result property="imageUrl" column="image_url"/>
+        <result property="description" column="description"/>
+        <result property="detail" column="detail"/>
+        <result property="price" column="price"/>
+        <result property="originalPrice" column="original_price"/>
+        <result property="stock" column="stock"/>
+        <result property="status" column="status"/>
+        <result property="recommended" column="recommended"/>
+        <result property="deleted" column="deleted"/>
+        <result property="version" column="version"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <!-- 用户端商品分页：分类必须启用，展示销售中和售罄商品，固定后端排序。 -->
+    <select id="selectUserPage" resultMap="ProductResultMap">
+        SELECT p.id, p.shop_id, p.category_id, p.name, p.image_url, p.description, p.detail,
+               p.price, p.original_price, p.stock, p.status, p.recommended, p.deleted,
+               p.version, p.create_time, p.update_time
+        FROM product p
+        INNER JOIN category c ON c.id = p.category_id
+            AND c.shop_id = p.shop_id AND c.status = 1 AND c.deleted = 0
+        WHERE p.shop_id = #{shopId}
+          AND p.deleted = 0
+          AND p.status IN (1, 2)
+        <if test="categoryId != null">
+          AND p.category_id = #{categoryId}
+        </if>
+        <if test="keyword != null and keyword != ''">
+          AND (p.name LIKE CONCAT('%', #{keyword}, '%')
+               OR p.description LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        ORDER BY p.recommended DESC, p.id DESC
+    </select>
+</mapper>
