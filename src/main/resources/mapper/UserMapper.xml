@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shike.ordering.mapper.UserMapper">
+    <!-- 串行化同一用户的购物车合并和默认地址变更。 -->
+    <select id="selectIdForUpdate" resultType="java.lang.Long">
+        SELECT u.id
+        FROM `user` u
+        WHERE u.id = #{id}
+        FOR UPDATE
+    </select>
+</mapper>

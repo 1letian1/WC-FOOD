@@ -156,7 +156,7 @@ CREATE TABLE IF NOT EXISTS shopping_cart (
   PRIMARY KEY (id),
   UNIQUE KEY uk_cart_user_product_option (user_id, product_id, specification_id, taste_id),
   KEY idx_cart_user_shop (user_id, shop_id),
-  CONSTRAINT chk_cart_quantity CHECK (quantity > 0)
+  CONSTRAINT chk_cart_quantity CHECK (quantity BETWEEN 1 AND 99)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='购物车';
 
 CREATE TABLE IF NOT EXISTS address (

@@ -137,7 +137,7 @@ user ─┬─ address
 | product_id | BIGINT UNSIGNED | NOT NULL |
 | specification_id | BIGINT UNSIGNED | NOT NULL DEFAULT 0，0 表示无规格 |
 | taste_id | BIGINT UNSIGNED | NOT NULL DEFAULT 0，0 表示无口味 |
-| quantity | INT UNSIGNED | NOT NULL，> 0 |
+| quantity | INT UNSIGNED | NOT NULL，1—99 |
 
 索引：`uk_cart_user_product_option(user_id,product_id,specification_id,taste_id)`、`idx_cart_user_shop(user_id,shop_id)`。不保存可信结算价；查询时关联当前商品计算预览。
 
@@ -147,7 +147,7 @@ user ─┬─ address
 |---|---|---|
 | user_id | BIGINT UNSIGNED | NOT NULL |
 | contact_name | VARCHAR(64) | NOT NULL |
-| gender | TINYINT | 可空 |
+| gender | TINYINT | 可空，1 先生/2 女士 |
 | phone | VARCHAR(20) | NOT NULL |
 | area | VARCHAR(120) | NOT NULL |
 | detail | VARCHAR(255) | NOT NULL |
@@ -156,7 +156,7 @@ user ─┬─ address
 | is_default | TINYINT | NOT NULL DEFAULT 0 |
 | deleted | TINYINT | NOT NULL DEFAULT 0 |
 
-索引：`idx_address_user_deleted_default(user_id,deleted,is_default)`。设置默认地址时事务内先清除其他默认项。
+索引：`idx_address_user_deleted_default(user_id,deleted,is_default)`。设置默认地址时在事务内先锁定当前 `user` 行，再清除其他默认项并设置新默认项；同一用户的并发变更由该行锁串行化。
 
 ### 3.10 orders
 

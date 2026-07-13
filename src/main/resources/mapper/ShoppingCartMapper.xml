@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shike.ordering.mapper.ShoppingCartMapper">
+    <resultMap id="CartItemResultMap" type="com.shike.ordering.vo.user.CartItemVO">
+        <id property="id" column="id"/>
+        <result property="productId" column="product_id"/>
+        <result property="productName" column="product_name"/>
+        <result property="productImageUrl" column="product_image_url"/>
+        <result property="specificationId" column="specification_id"/>
+        <result property="specificationName" column="specification_name"/>
+        <result property="tasteId" column="taste_id"/>
+        <result property="tasteName" column="taste_name"/>
+        <result property="unitPrice" column="unit_price"/>
+        <result property="quantity" column="quantity"/>
+        <result property="amount" column="amount"/>
+        <result property="available" column="available"/>
+    </resultMap>
+
+    <!-- 购物车预览使用当前商品和规格价格，不把购物车价格作为结算依据。 -->
+    <select id="selectUserCart" resultMap="CartItemResultMap">
+        SELECT c.id,
+               c.product_id,
+               p.name AS product_name,
+               p.image_url AS product_image_url,
+               NULLIF(c.specification_id, 0) AS specification_id,
+               ps.name AS specification_name,
+               NULLIF(c.taste_id, 0) AS taste_id,
+               pt.name AS taste_name,
+               COALESCE(p.price, 0.00) + COALESCE(ps.price_delta, 0.00) AS unit_price,
+               c.quantity,
+               (COALESCE(p.price, 0.00) + COALESCE(ps.price_delta, 0.00)) * c.quantity AS amount,
+               CASE WHEN p.id IS NOT NULL AND p.deleted = 0 AND p.status = 1
+                         AND p.stock >= c.quantity AND cat.id IS NOT NULL AND cat.deleted = 0 AND cat.status = 1
+                         AND (c.specification_id = 0 OR (ps.id IS NOT NULL AND ps.deleted = 0 AND ps.status = 1))
+                         AND (c.taste_id = 0 OR (pt.id IS NOT NULL AND pt.deleted = 0 AND pt.status = 1))
+                    THEN 1 ELSE 0 END AS available
+        FROM shopping_cart c
+        LEFT JOIN product p ON p.id = c.product_id AND p.shop_id = c.shop_id
+        LEFT JOIN category cat ON cat.id = p.category_id AND cat.shop_id = p.shop_id
+        LEFT JOIN product_specification ps ON ps.id = c.specification_id AND ps.product_id = c.product_id
+        LEFT JOIN product_taste pt ON pt.id = c.taste_id AND pt.product_id = c.product_id
+        WHERE c.user_id = #{userId}
+        ORDER BY c.id DESC
+    </select>
+</mapper>
