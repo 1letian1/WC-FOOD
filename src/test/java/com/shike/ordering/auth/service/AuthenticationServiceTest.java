@@ -8,6 +8,7 @@ import com.shike.ordering.client.wechat.WechatClient;
 import com.shike.ordering.common.exception.BusinessException;
 import com.shike.ordering.common.security.PasswordService;
 import com.shike.ordering.config.RedisProperties;
+import com.shike.ordering.dto.user.UserProfileUpdateDTO;
 import com.shike.ordering.entity.MerchantAccount;
 import com.shike.ordering.entity.User;
 import com.shike.ordering.mapper.MerchantAccountMapper;
@@ -101,5 +102,29 @@ class AuthenticationServiceTest {
         verify(merchantMapper).update(argThat(update ->
                 "new-hash".equals(update.getPasswordHash()) && update.getSessionVersion() == 3), any(Wrapper.class));
         verify(sessionService).deleteAllMerchantSessions(3L);
+    }
+
+    @Test
+    void updateCurrentUser_whenFieldsAreProvided_shouldOnlyUpdateProvidedFields() {
+        PrincipalContext.set(new CurrentPrincipal(11L, PrincipalType.USER, null, "current-token"));
+        User user = new User();
+        user.setId(11L);
+        user.setNickname("旧昵称");
+        user.setAvatarUrl("https://example.com/old.png");
+        user.setPhone("13800000000");
+        user.setStatus(1);
+        when(userMapper.selectById(11L)).thenReturn(user);
+        when(userMapper.updateById(any(User.class))).thenReturn(1);
+
+        var result = service.updateCurrentUser(
+                new UserProfileUpdateDTO(" 新昵称 ", null, "13900000000"));
+
+        assertThat(result.nickname()).isEqualTo("新昵称");
+        assertThat(result.avatarUrl()).isEqualTo("https://example.com/old.png");
+        assertThat(result.phone()).isEqualTo("13900000000");
+        verify(userMapper).updateById(argThat((User update) -> update.getId().equals(11L)
+                && "新昵称".equals(update.getNickname())
+                && update.getAvatarUrl() == null
+                && "13900000000".equals(update.getPhone())));
     }
 }

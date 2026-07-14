@@ -12,6 +12,7 @@ import com.shike.ordering.common.exception.ErrorCode;
 import com.shike.ordering.common.security.PasswordService;
 import com.shike.ordering.entity.MerchantAccount;
 import com.shike.ordering.entity.User;
+import com.shike.ordering.dto.user.UserProfileUpdateDTO;
 import com.shike.ordering.mapper.MerchantAccountMapper;
 import com.shike.ordering.mapper.UserMapper;
 import com.shike.ordering.vo.merchant.MerchantLoginVO;
@@ -95,6 +96,32 @@ public class AuthenticationService {
         CurrentPrincipal principal = requireType(PrincipalType.USER);
         User user = userMapper.selectById(principal.principalId());
         if (user == null || !Objects.equals(user.getStatus(), 1)) throw new BusinessException(ErrorCode.UNAUTHORIZED);
+        return toUserProfile(user);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public UserProfileVO updateCurrentUser(UserProfileUpdateDTO request) {
+        CurrentPrincipal principal = requireType(PrincipalType.USER);
+        if (!request.isAnyFieldProvided()) throw new BusinessException(ErrorCode.PARAM_ERROR);
+        User user = userMapper.selectById(principal.principalId());
+        if (user == null || !Objects.equals(user.getStatus(), 1)) throw new BusinessException(ErrorCode.UNAUTHORIZED);
+
+        User update = new User();
+        update.setId(user.getId());
+        if (request.nickname() != null) {
+            update.setNickname(request.nickname());
+            user.setNickname(request.nickname());
+        }
+        if (request.avatarUrl() != null) {
+            update.setAvatarUrl(request.avatarUrl());
+            user.setAvatarUrl(request.avatarUrl());
+        }
+        if (request.phone() != null) {
+            update.setPhone(request.phone());
+            user.setPhone(request.phone());
+        }
+        if (userMapper.updateById(update) != 1) throw new BusinessException(ErrorCode.DATA_CONFLICT);
+        log.info("user profile updated, userId={}", user.getId());
         return toUserProfile(user);
     }
 

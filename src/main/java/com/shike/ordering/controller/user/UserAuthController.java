@@ -2,6 +2,7 @@ package com.shike.ordering.controller.user;
 
 import com.shike.ordering.auth.service.AuthenticationService;
 import com.shike.ordering.common.result.Result;
+import com.shike.ordering.dto.user.UserProfileUpdateDTO;
 import com.shike.ordering.dto.user.WechatLoginDTO;
 import com.shike.ordering.vo.user.UserLoginVO;
 import com.shike.ordering.vo.user.UserProfileVO;
@@ -40,5 +41,12 @@ public class UserAuthController {
     @GetMapping("/profile")
     public Result<UserProfileVO> profile() {
         return Result.success(authenticationService.currentUser());
+    }
+
+    @Operation(summary = "修改当前用户资料", description = "仅更新请求中提供的昵称、头像地址或手机号")
+    @SecurityRequirement(name = "bearerAuth")
+    @PutMapping("/profile")
+    public Result<UserProfileVO> updateProfile(@Valid @RequestBody UserProfileUpdateDTO request) {
+        return Result.success(authenticationService.updateCurrentUser(request));
     }
 }
