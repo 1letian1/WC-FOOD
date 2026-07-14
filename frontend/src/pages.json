@@ -1,0 +1,28 @@
+{
+  "pages": [
+    { "path": "pages/login/index", "style": { "navigationStyle": "custom" } },
+    { "path": "pages/home/index", "style": { "navigationStyle": "custom", "enablePullDownRefresh": true } },
+    { "path": "pages/cart/index", "style": { "navigationBarTitleText": "购物车" } },
+    { "path": "pages/checkout/index", "style": { "navigationBarTitleText": "确认订单" } },
+    { "path": "pages/order-success/index", "style": { "navigationStyle": "custom" } },
+    { "path": "pages/orders/index", "style": { "navigationBarTitleText": "我的订单", "enablePullDownRefresh": true } },
+    { "path": "pages/order-detail/index", "style": { "navigationBarTitleText": "订单详情" } },
+    { "path": "pages/profile/index", "style": { "navigationStyle": "custom" } },
+    { "path": "pages/addresses/index", "style": { "navigationBarTitleText": "收货地址" } },
+    { "path": "pages/merchant/login", "style": { "navigationBarTitleText": "商家登录" } },
+    { "path": "pages/merchant/dashboard", "style": { "navigationStyle": "custom", "enablePullDownRefresh": true } },
+    { "path": "pages/merchant/orders", "style": { "navigationBarTitleText": "订单管理", "enablePullDownRefresh": true } },
+    { "path": "pages/merchant/order-detail", "style": { "navigationBarTitleText": "订单详情" } },
+    { "path": "pages/merchant/products", "style": { "navigationBarTitleText": "商品管理", "enablePullDownRefresh": true } },
+    { "path": "pages/merchant/product-edit", "style": { "navigationBarTitleText": "商品编辑" } },
+    { "path": "pages/merchant/settings", "style": { "navigationBarTitleText": "店铺设置" } },
+    { "path": "pages/merchant/profile", "style": { "navigationStyle": "custom" } },
+    { "path": "pages/merchant/password", "style": { "navigationBarTitleText": "修改密码" } }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "食刻小馆",
+    "navigationBarBackgroundColor": "#ffffff",
+    "backgroundColor": "#f7f8fa"
+  }
+}

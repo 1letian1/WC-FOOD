@@ -1,0 +1,14 @@
+{
+  "name": "食刻小馆",
+  "appid": "__UNI__SHIKE_ORDERING__",
+  "description": "食刻小馆微信点餐小程序",
+  "versionName": "1.0.0",
+  "versionCode": "100",
+  "transformPx": false,
+  "mp-weixin": {
+    "appid": "",
+    "setting": { "urlCheck": true },
+    "usingComponents": true
+  },
+  "h5": { "router": { "mode": "hash" } }
+}
