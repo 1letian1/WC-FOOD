@@ -1,0 +1,11 @@
+.git
+.idea
+.vscode
+.env
+target
+uploads
+backups
+YuanXing
+deploy/certs/*.pem
+deploy/certs/*.key
+*.log

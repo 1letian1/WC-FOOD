@@ -7,6 +7,9 @@ application-dev.local.yml
 application-prod.local.yml
 logs/
 uploads/
+backups/
+deploy/certs/*.pem
+deploy/certs/*.key
 *.log
 .mvn-local/
 .DS_Store

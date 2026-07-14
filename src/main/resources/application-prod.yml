@@ -5,7 +5,20 @@ springdoc:
     enabled: ${SWAGGER_ENABLED:false}
 logging:
   level:
-    root: INFO
+    root: ${LOG_LEVEL_ROOT:INFO}
+spring:
+  datasource:
+    hikari:
+      maximum-pool-size: ${DB_POOL_MAX_SIZE:10}
+      minimum-idle: ${DB_POOL_MIN_IDLE:2}
+      connection-timeout: 30000
+      validation-timeout: 5000
+      max-lifetime: 1800000
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+server:
+  forward-headers-strategy: framework
+  shutdown: graceful
 shike:
   wechat:
     mock-enabled: false
